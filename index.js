@@ -82,13 +82,34 @@ function HomeScreen() {
   input.value = state.inputValue;
   input.oninput = function (event) {
     setState({ inputValue: event.target.value });
-    // localStorage.setItem("inputValue", event.target.value);
-    // textPreview.textContent = event.target.value;
-    // state.inputValue = event.target.value;
-    // render();
   };
-
   input.placeholder = "Input your name";
+
+  const searchProduct = state.inputValue;
+  const titleProduct = document.createElement("ol");
+  titleProduct.textContent = "Daftar Produk";
+  titleProduct.style.fontSize = "20px";
+
+  const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${searchProduct}`;
+
+  fetch(DUMMY_JSON_API)
+    .then((response) => response.json())
+    .then((json) => {
+      const dataProducts = json.products;
+      // console.log(dataProducts);
+      dataProducts.map((item) => {
+        // console.log(item.title);
+        const titleProductList = document.createElement("li");
+        titleProductList.textContent = item.title;
+
+        const categoryProduct = document.createElement("span");
+        categoryProduct.textContent = item.category;
+        titleProduct.append(titleProductList);
+        titleProduct.append(categoryProduct);
+        // console.log(categoryProduct);
+      });
+    })
+    .catch((error) => console.log(error));
 
   const buttonClear = document.createElement("button");
   buttonClear.textContent = "Clear";
@@ -106,7 +127,8 @@ function HomeScreen() {
   div.append(navbar);
   div.append(input);
   div.append(buttonClear);
-  div.append(textPreview);
+  // div.append(textPreview);
+  div.append(titleProduct);
 
   return div;
 }
