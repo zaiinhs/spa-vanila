@@ -1,6 +1,9 @@
 let state = {
   inputValue: localStorage.getItem("inputValue") ?? "",
   hash: location.hash,
+  products: [],
+  isLoading: false,
+  errorMessage: "",
 };
 
 function setState(newState) {
@@ -15,6 +18,35 @@ function setState(newState) {
 function onStageChange(prevState, nextState) {
   if (prevState.inputValue !== nextState.inputValue) {
     localStorage.setItem("inputValue", nextState.inputValue);
+
+    const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${nextState.inputValue}`;
+
+    setState({ isLoading: true });
+    fetch(DUMMY_JSON_API)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          return Promise.reject({
+            status: response.status,
+          });
+        }
+      })
+      .then((json) => {
+        const dataProducts = json.products;
+        setState({
+          products: dataProducts,
+          errorMessage: "",
+          isLoading: false,
+        });
+      })
+      .catch((error) => {
+        setState({
+          errorMessage: "error fetching",
+          isLoading: false,
+          products: [],
+        });
+      });
   }
 
   if (prevState.hash !== nextState.hash) {
@@ -85,49 +117,45 @@ function HomeScreen() {
   };
   input.placeholder = "Input your name";
 
-  const searchProduct = state.inputValue;
-  const titleProduct = document.createElement("ol");
-  titleProduct.textContent = "Daftar Produk";
-  titleProduct.style.fontSize = "20px";
-
-  const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${searchProduct}`;
-
-  fetch(DUMMY_JSON_API)
-    .then((response) => response.json())
-    .then((json) => {
-      const dataProducts = json.products;
-      // console.log(dataProducts);
-      dataProducts.map((item) => {
-        // console.log(item.title);
-        const titleProductList = document.createElement("li");
-        titleProductList.textContent = item.title;
-
-        const categoryProduct = document.createElement("span");
-        categoryProduct.textContent = item.category;
-        titleProduct.append(titleProductList);
-        titleProduct.append(categoryProduct);
-        // console.log(categoryProduct);
-      });
-    })
-    .catch((error) => console.log(error));
-
   const buttonClear = document.createElement("button");
   buttonClear.textContent = "Clear";
   buttonClear.onclick = function () {
     setState({ inputValue: "" });
-    // localStorage.setItem("inputValue", event.target.value);
-    // state.inputValue = "";
-    // render();
-    // input.value = "";
-    // textPreview.textContent = "";
   };
+
+  const titleProduct = document.createElement("ol");
+  titleProduct.textContent = "Daftar Produk";
+  titleProduct.style.fontSize = "20px";
+
+  if (state.isLoading) {
+    const titleProductInfo = document.createElement("h1");
+    titleProductInfo.textContent = "Loading...";
+    titleProduct.append(titleProductInfo);
+  } else if (state.errorMessage !== "") {
+    const titleProductInfo = document.createElement("h1");
+    titleProductInfo.textContent = state.errorMessage;
+    titleProduct.append(titleProductInfo);
+  } else if (state.products.length === 0) {
+    const titleProductInfo = document.createElement("h1");
+    titleProductInfo.textContent = "produk tidak ada";
+    titleProduct.append(titleProductInfo);
+  } else {
+    state.products.forEach((item) => {
+      const titleProductList = document.createElement("li");
+      titleProductList.textContent = item.title;
+
+      const categoryProduct = document.createElement("span");
+      categoryProduct.textContent = item.category;
+      titleProduct.append(titleProductList);
+      titleProduct.append(categoryProduct);
+    });
+  }
 
   const div = document.createElement("div");
 
   div.append(navbar);
   div.append(input);
   div.append(buttonClear);
-  // div.append(textPreview);
   div.append(titleProduct);
 
   return div;
