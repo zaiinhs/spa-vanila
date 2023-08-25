@@ -2,6 +2,9 @@ let state = {
   inputValue: localStorage.getItem("inputValue") ?? "",
   hash: location.hash,
   products: [],
+  limitPage: 10,
+  skipPage: 0,
+  total: 0,
   isLoading: false,
   errorMessage: "",
 };
@@ -19,7 +22,8 @@ function onStageChange(prevState, nextState) {
   if (prevState.inputValue !== nextState.inputValue) {
     localStorage.setItem("inputValue", nextState.inputValue);
 
-    const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${nextState.inputValue}`;
+    // const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${nextState.inputValue}`;
+    const DUMMY_JSON_API = `https://dummyjson.com/products/search?limit=${nextState.limitPage}&skip=${nextState.skipPage}&select=title,category&q=${nextState.inputValue}`;
 
     setState({ isLoading: true });
     fetch(DUMMY_JSON_API)
@@ -34,8 +38,12 @@ function onStageChange(prevState, nextState) {
       })
       .then((json) => {
         const dataProducts = json.products;
+        console.log(json);
         setState({
           products: dataProducts,
+          limitPage: json.limit,
+          skipPage: json.skip,
+          total: json.total,
           errorMessage: "",
           isLoading: false,
         });
@@ -81,9 +89,31 @@ function NavBar() {
     label: "About",
   });
 
+  const linkProducts = Link({
+    href: "#products",
+    label: "Products",
+  });
+
   const div = document.createElement("div");
   div.append(linkHome);
   div.append(linkAbout);
+  div.append(linkProducts);
+
+  return div;
+}
+
+function ProductsScreen() {
+  const linkHome = Link({
+    href: "#home",
+    label: "Kembali ke Home",
+  });
+
+  const textProducts = document.createElement("h1");
+  textProducts.textContent = "Products All";
+
+  const div = document.createElement("div");
+  div.append(linkHome);
+  div.append(textProducts);
 
   return div;
 }
@@ -123,6 +153,26 @@ function HomeScreen() {
     setState({ inputValue: "" });
   };
 
+  const wrapperPagination = document.createElement("div");
+  const buttonPrevPagination = document.createElement("button");
+  const buttonNextPagination = document.createElement("button");
+  buttonPrevPagination.textContent = "<--Prev";
+  buttonNextPagination.textContent = "Next-->";
+  wrapperPagination.style.marginTop = "20px";
+
+  console.log("data: ", state.products);
+  console.log("Total data: ", state.total);
+  console.log("Total limit: ", state.limitPage);
+  console.log("Total skip: ", state.skipPage);
+
+  const pageCount = Math.ceil(state.total / state.limitPage);
+
+  console.log(pageCount);
+  for (let i = 0; i < pageCount; i++) {
+    const hasil = pageCount * state.skipPage - state.limitPage;
+    // console.log(hasil);
+  }
+
   const titleProduct = document.createElement("ol");
   titleProduct.textContent = "Daftar Produk";
   titleProduct.style.fontSize = "20px";
@@ -156,7 +206,11 @@ function HomeScreen() {
   div.append(navbar);
   div.append(input);
   div.append(buttonClear);
+  div.append(wrapperPagination);
   div.append(titleProduct);
+
+  wrapperPagination.appendChild(buttonPrevPagination);
+  wrapperPagination.appendChild(buttonNextPagination);
 
   return div;
 }
@@ -164,11 +218,14 @@ function HomeScreen() {
 function App() {
   const homeScreen = HomeScreen();
   const aboutScreen = AboutScreen();
+  const productsScreen = ProductsScreen();
 
   if (state.hash === "#about") {
     return aboutScreen;
   } else if (state.hash === "#home") {
     return homeScreen;
+  } else if (state.hash === "#products") {
+    return productsScreen;
   }
 }
 
