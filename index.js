@@ -2,8 +2,8 @@ let state = {
   inputValue: localStorage.getItem("inputValue") ?? "",
   hash: location.hash,
   products: [],
-  limitPage: 10,
-  skipPage: 0,
+  limitItem: 20,
+  skipItem: 0,
   total: 0,
   isLoading: false,
   errorMessage: "",
@@ -19,11 +19,14 @@ function setState(newState) {
 
 // Ini adalah sideEffect, dimana sebuah function yg akan dijalankan ketika state nya berubah
 function onStageChange(prevState, nextState) {
-  if (prevState.inputValue !== nextState.inputValue) {
+  if (
+    prevState.inputValue !== nextState.inputValue ||
+    prevState.skipItem !== nextState.skipItem
+  ) {
     localStorage.setItem("inputValue", nextState.inputValue);
 
     // const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${nextState.inputValue}`;
-    const DUMMY_JSON_API = `https://dummyjson.com/products/search?limit=${nextState.limitPage}&skip=${nextState.skipPage}&select=title,category&q=${nextState.inputValue}`;
+    const DUMMY_JSON_API = `https://dummyjson.com/products/search?limit=${nextState.limitItem}&skip=${nextState.skipItem}&select=title,category&q=${nextState.inputValue}`;
 
     setState({ isLoading: true });
     fetch(DUMMY_JSON_API)
@@ -41,8 +44,8 @@ function onStageChange(prevState, nextState) {
         console.log(json);
         setState({
           products: dataProducts,
-          limitPage: json.limit,
-          skipPage: json.skip,
+          limitItem: json.limit,
+          skipItem: json.skip,
           total: json.total,
           errorMessage: "",
           isLoading: false,
@@ -153,27 +156,56 @@ function HomeScreen() {
     setState({ inputValue: "" });
   };
 
+  /*
+  page 1:
+  limit: 4
+  skip: 0
+
+  page 2:
+  limit: 4
+  skip: 4
+
+  rumus = total - limit
+
+  limit: 20
+  total: 100
+  max skip: 80
+
+  limit: 20
+  total: 200
+  max skip: 180
+
+  limit: 10
+  total: 300
+  max skip: 290
+
+
+  limit: 10
+  total: 4
+  max skip: -6
+  */
+
+  // START PAGINATION
   const wrapperPagination = document.createElement("div");
+
   const buttonPrevPagination = document.createElement("button");
-  const buttonNextPagination = document.createElement("button");
   buttonPrevPagination.textContent = "<--Prev";
+  buttonPrevPagination.disabled = state.skipItem === 0;
+  buttonPrevPagination.onclick = () => {
+    setState({ skipItem: state.skipItem - state.limitItem });
+  };
+
+  const buttonNextPagination = document.createElement("button");
   buttonNextPagination.textContent = "Next-->";
+  const maxSkip = state.total - state.limitItem;
+  buttonNextPagination.disabled = state.skipItem >= maxSkip;
+  buttonNextPagination.onclick = () => {
+    setState({ skipItem: state.skipItem + state.limitItem });
+  };
+
   wrapperPagination.style.marginTop = "20px";
 
-  console.log("data: ", state.products);
-  console.log("Total data: ", state.total);
-  console.log("Total limit: ", state.limitPage);
-  console.log("Total skip: ", state.skipPage);
-
-  const pageCount = Math.ceil(state.total / state.limitPage);
-
-  console.log(pageCount);
-  for (let i = 0; i < pageCount; i++) {
-    const hasil = pageCount * state.skipPage - state.limitPage;
-    // console.log(hasil);
-  }
-
-  const titleProduct = document.createElement("ol");
+  const titleProduct = document.createElement("ul");
   titleProduct.textContent = "Daftar Produk";
   titleProduct.style.fontSize = "20px";
 
