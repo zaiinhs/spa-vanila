@@ -2,7 +2,7 @@ let state = {
   inputValue: localStorage.getItem("inputValue") ?? "",
   hash: location.hash,
   products: [],
-  limitItem: 20,
+  limitItem: 5,
   skipItem: 0,
   total: 0,
   isLoading: false,
@@ -19,17 +19,21 @@ function setState(newState) {
 
 // Ini adalah sideEffect, dimana sebuah function yg akan dijalankan ketika state nya berubah
 function onStageChange(prevState, nextState) {
+  if (prevState.inputValue !== nextState.inputValue) {
+    setState({ skipItem: 0 });
+  }
+
   if (
     prevState.inputValue !== nextState.inputValue ||
-    prevState.skipItem !== nextState.skipItem
+    prevState.skipItem !== nextState.skipItem ||
+    prevState.limitItem !== nextState.limitItem
   ) {
     localStorage.setItem("inputValue", nextState.inputValue);
-
-    // const DUMMY_JSON_API = `https://dummyjson.com/products/search?q=${nextState.inputValue}`;
-    const DUMMY_JSON_API = `https://dummyjson.com/products/search?limit=${nextState.limitItem}&skip=${nextState.skipItem}&select=title,category&q=${nextState.inputValue}`;
+    const PRODUCT_JSON_API = `https://dummyjson.com/products/search?limit=${nextState.limitItem}&skip=${nextState.skipItem}&select=title,category&q=${nextState.inputValue}`;
 
     setState({ isLoading: true });
-    fetch(DUMMY_JSON_API)
+
+    fetch(PRODUCT_JSON_API)
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -41,11 +45,8 @@ function onStageChange(prevState, nextState) {
       })
       .then((json) => {
         const dataProducts = json.products;
-        console.log(json);
         setState({
           products: dataProducts,
-          limitItem: json.limit,
-          skipItem: json.skip,
           total: json.total,
           errorMessage: "",
           isLoading: false,
@@ -151,6 +152,7 @@ function HomeScreen() {
   input.placeholder = "Input your name";
 
   const buttonClear = document.createElement("button");
+  buttonClear.disabled = state.isLoading;
   buttonClear.textContent = "Clear";
   buttonClear.onclick = function () {
     setState({ inputValue: "" });
@@ -188,9 +190,10 @@ function HomeScreen() {
   // START PAGINATION
   const wrapperPagination = document.createElement("div");
 
-  const buttonPrevPagination = document.createElement("button");
+  let buttonPrevPagination = document.createElement("button");
   buttonPrevPagination.textContent = "<--Prev";
-  buttonPrevPagination.disabled = state.skipItem === 0;
+  buttonPrevPagination.disabled = state.skipItem <= 0 || state.isLoading;
+
   buttonPrevPagination.onclick = () => {
     setState({ skipItem: state.skipItem - state.limitItem });
   };
@@ -198,10 +201,33 @@ function HomeScreen() {
   const buttonNextPagination = document.createElement("button");
   buttonNextPagination.textContent = "Next-->";
   const maxSkip = state.total - state.limitItem;
-  buttonNextPagination.disabled = state.skipItem >= maxSkip;
+
+  buttonNextPagination.disabled = state.skipItem >= maxSkip || state.isLoading;
+
   buttonNextPagination.onclick = () => {
     setState({ skipItem: state.skipItem + state.limitItem });
   };
+
+  const labelLimit = document.createElement("label");
+  labelLimit.textContent = "Limit";
+  labelLimit.style.marginLeft = "20px";
+
+  const selectLimit = document.createElement("select");
+  selectLimit.disabled = state.isLoading;
+  selectLimit.onchange = (e) => {
+    setState({ limitItem: Number(e.target.value) });
+    console.log("e.target.value: ", typeof Number(e.target.value));
+  };
+
+  const listItem = [2, 5, 10, 20, 30];
+  listItem.forEach((item) => {
+    const optionLimit = document.createElement("option");
+    optionLimit.textContent = item;
+    optionLimit.value = item;
+    selectLimit.appendChild(optionLimit);
+  });
+
+  selectLimit.value = state.limitItem;
 
   wrapperPagination.style.marginTop = "20px";
 
@@ -243,6 +269,8 @@ function HomeScreen() {
 
   wrapperPagination.appendChild(buttonPrevPagination);
   wrapperPagination.appendChild(buttonNextPagination);
+  wrapperPagination.appendChild(labelLimit);
+  wrapperPagination.append(selectLimit);
 
   return div;
 }
