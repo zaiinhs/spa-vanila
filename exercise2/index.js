@@ -2,18 +2,19 @@ let state = {
   products: JSON.parse(localStorage.getItem("productItem")) || [],
 };
 
-// function setState(newState) {
-//   const prevState = { ...state };
-//   const nextState = { ...state, ...newState };
-//   state = nextState;
-//   render();
-//   onStageChange(prevState, nextState);
-// }
+function setState(newState) {
+  const prevState = { ...state };
+  const nextState = { ...state, ...newState };
+  state = nextState;
+  render();
+  onStageChange(prevState, nextState);
+}
 
-// function onStageChange(prevState, nextState) {
-//   if (prevState.product !== nextState.product) {
-//   }
-// }
+function onStageChange(prevState, nextState) {
+  if (prevState.product !== nextState.product) {
+    console.log("Berjalan");
+  }
+}
 
 function HomeScreen() {
   const formInput = document.createElement("form");
@@ -38,6 +39,7 @@ function HomeScreen() {
 
   formInput.addEventListener("submit", (e) => {
     e.preventDefault();
+
     const inputName = inputNameItem.value;
     const inputPrice = inputPriceItem.value;
 
@@ -73,7 +75,13 @@ function HomeScreen() {
     const hapusData = document.createElement("button");
     hapusData.textContent = "Hapus";
     hapusData.onclick = () => {
-      console.log(index);
+      const result = state.products;
+      const indexToRemove = index;
+
+      if (indexToRemove >= 0 && indexToRemove < result.length) {
+        result.splice(indexToRemove, 1); // Hapus 1 elemen mulai dari indeks yang ditentukan
+        localStorage.setItem("productItem", JSON.stringify(result));
+      }
     };
 
     wrapperListItem.appendChild(wrapperItem);
