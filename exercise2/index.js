@@ -1,19 +1,19 @@
 let state = {
-  product: [],
+  products: JSON.parse(localStorage.getItem("productItem")) || [],
 };
 
-function setState(newState) {
-  const prevState = { ...state };
-  const nextState = { ...state, ...newState };
-  state = nextState;
-  render();
-  onStageChange(prevState, nextState);
-}
+// function setState(newState) {
+//   const prevState = { ...state };
+//   const nextState = { ...state, ...newState };
+//   state = nextState;
+//   render();
+//   onStageChange(prevState, nextState);
+// }
 
-function onStageChange(prevState, nextState) {
-  // if (prevState.product !== nextState.product) {
-  // }
-}
+// function onStageChange(prevState, nextState) {
+//   if (prevState.product !== nextState.product) {
+//   }
+// }
 
 function HomeScreen() {
   const formInput = document.createElement("form");
@@ -38,45 +38,53 @@ function HomeScreen() {
 
   formInput.addEventListener("submit", (e) => {
     e.preventDefault();
-    setState({
-      product: [
-        {
-          name: inputNameItem.value,
-          price: inputPriceItem.value,
-        },
-      ],
-    });
+    const inputName = inputNameItem.value;
+    const inputPrice = inputPriceItem.value;
+
+    if ((inputName && inputPrice) !== "") {
+      const product = {
+        name: inputName,
+        price: inputPrice,
+      };
+
+      state.products.push(product);
+      localStorage.setItem("productItem", JSON.stringify(state.products));
+      formInput.reset();
+    }
   });
-
-  const hapusData = document.createElement("button");
-  hapusData.textContent = "Hapus";
-  hapusData.disabled = state.product.length === 0;
-
-  hapusData.onclick = () => {
-    setState({ product: [] });
-  };
 
   const titleItem = document.createElement("h3");
   titleItem.textContent = "List barang";
 
   const wrapperListItem = document.createElement("ul");
 
-  state.product.forEach((item) => {
-    const listItemName = document.createElement("li");
+  state.products.forEach((item, index) => {
+    const wrapperItem = document.createElement("li");
+    wrapperItem.style.display = "flex";
+    wrapperItem.style.justifyContent = "space-evenly";
+
+    const listItemName = document.createElement("p");
+    listItemName.style.margin = "0";
     listItemName.textContent = item.name;
 
     const listItemPrice = document.createElement("span");
     listItemPrice.textContent = item.price;
 
-    wrapperListItem.appendChild(listItemName);
-    wrapperListItem.appendChild(listItemPrice);
+    const hapusData = document.createElement("button");
+    hapusData.textContent = "Hapus";
+    hapusData.onclick = () => {
+      console.log(index);
+    };
+
+    wrapperListItem.appendChild(wrapperItem);
+    wrapperItem.appendChild(listItemName);
+    wrapperItem.appendChild(listItemPrice);
+    wrapperItem.appendChild(hapusData);
   });
 
   const div = document.createElement("div");
-  div.style.display = "inline-grid";
 
   div.append(formInput);
-  div.append(hapusData);
   div.append(titleItem);
   div.append(wrapperListItem);
 
