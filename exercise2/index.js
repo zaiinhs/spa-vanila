@@ -1,20 +1,22 @@
 let state = {
   products: JSON.parse(localStorage.getItem("productItem")) || [],
+  inputPrice: "",
+  inputName: "",
 };
 
 function setState(newState) {
   const prevState = { ...state };
   const nextState = { ...state, ...newState };
   state = nextState;
+
   render();
-  onStageChange(prevState, nextState);
+  // onStageChange(prevState, nextState);
 }
 
-function onStageChange(prevState, nextState) {
-  if (prevState.product !== nextState.product) {
-    console.log("Berjalan");
-  }
-}
+// function onStageChange(prevState, nextState) {
+//   if (prevState.products !== nextState.products) {
+//   }
+// }
 
 function HomeScreen() {
   const formInput = document.createElement("form");
@@ -37,21 +39,25 @@ function HomeScreen() {
   submitItem.value = "Submit";
   submitItem.type = "submit";
 
+  console.log("state", state.products);
+
   formInput.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const inputName = inputNameItem.value;
-    const inputPrice = inputPriceItem.value;
+    setState({
+      inputName: inputNameItem.value,
+      inputPrice: inputPriceItem.value,
+    });
 
-    if ((inputName && inputPrice) !== "") {
-      const product = {
-        name: inputName,
-        price: inputPrice,
+    if (state.inputName && state.inputPrice !== "") {
+      let product = {
+        nameItem: state.inputName,
+        priceItem: state.inputPrice,
       };
 
       state.products.push(product);
+      setState({ products: state.products });
       localStorage.setItem("productItem", JSON.stringify(state.products));
-      formInput.reset();
     }
   });
 
@@ -67,19 +73,21 @@ function HomeScreen() {
 
     const listItemName = document.createElement("p");
     listItemName.style.margin = "0";
-    listItemName.textContent = item.name;
+    listItemName.textContent = item.nameItem;
 
     const listItemPrice = document.createElement("span");
-    listItemPrice.textContent = item.price;
+    listItemPrice.textContent = item.priceItem;
 
-    const hapusData = document.createElement("button");
-    hapusData.textContent = "Hapus";
-    hapusData.onclick = () => {
+    const deleteItem = document.createElement("button");
+    deleteItem.textContent = "Hapus";
+    deleteItem.onclick = () => {
       const result = state.products;
       const indexToRemove = index;
 
       if (indexToRemove >= 0 && indexToRemove < result.length) {
         result.splice(indexToRemove, 1); // Hapus 1 elemen mulai dari indeks yang ditentukan
+
+        setState({ products: result });
         localStorage.setItem("productItem", JSON.stringify(result));
       }
     };
@@ -87,7 +95,7 @@ function HomeScreen() {
     wrapperListItem.appendChild(wrapperItem);
     wrapperItem.appendChild(listItemName);
     wrapperItem.appendChild(listItemPrice);
-    wrapperItem.appendChild(hapusData);
+    wrapperItem.appendChild(deleteItem);
   });
 
   const div = document.createElement("div");
