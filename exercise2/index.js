@@ -10,13 +10,14 @@ function setState(newState) {
   state = nextState;
 
   render();
-  // onStageChange(prevState, nextState);
+  onStageChange(prevState, nextState);
 }
 
-// function onStageChange(prevState, nextState) {
-//   if (prevState.products !== nextState.products) {
-//   }
-// }
+function onStageChange(prevState, nextState) {
+  if (prevState.products !== nextState.products) {
+    localStorage.setItem("productItem", JSON.stringify(nextState.products));
+  }
+}
 
 function HomeScreen() {
   const formInput = document.createElement("form");
@@ -39,8 +40,6 @@ function HomeScreen() {
   submitItem.value = "Submit";
   submitItem.type = "submit";
 
-  console.log("state", state.products);
-
   formInput.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -55,9 +54,8 @@ function HomeScreen() {
         priceItem: state.inputPrice,
       };
 
-      state.products.push(product);
-      setState({ products: state.products });
-      localStorage.setItem("productItem", JSON.stringify(state.products));
+      const mergedArray = state.products.concat(product);
+      setState({ products: mergedArray });
     }
   });
 
@@ -85,10 +83,9 @@ function HomeScreen() {
       const indexToRemove = index;
 
       if (indexToRemove >= 0 && indexToRemove < result.length) {
-        result.splice(indexToRemove, 1); // Hapus 1 elemen mulai dari indeks yang ditentukan
+        const newArray = result.filter((obj, index) => index !== indexToRemove);
 
-        setState({ products: result });
-        localStorage.setItem("productItem", JSON.stringify(result));
+        setState({ products: newArray });
       }
     };
 
