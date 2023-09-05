@@ -10,10 +10,10 @@ function setState(newState) {
   state = nextState;
 
   render();
-  onStageChange(prevState, nextState);
+  onStateChange(prevState, nextState);
 }
 
-function onStageChange(prevState, nextState) {
+function onStateChange(prevState, nextState) {
   if (prevState.products !== nextState.products) {
     localStorage.setItem("productItem", JSON.stringify(nextState.products));
   }
